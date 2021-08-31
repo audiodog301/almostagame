@@ -1,7 +1,7 @@
-use std::thread;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use std::thread;
 
-use crate::instructions;
+use crate::instructions::Instruction;
 
 pub struct Saw {
     pub frequency: f32,
@@ -32,7 +32,7 @@ impl Saw {
     }
 }
 
-pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<instructions::Instruction>) {
+pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Instruction>) {
     let mut children = Vec::new();
     children.push(thread::spawn( move ||  {
         #[cfg(all(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"),feature = "jack"))]
@@ -68,8 +68,11 @@ pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<instructions::Instructio
     }));
 }
 
-fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig, receiver: crossbeam_channel::Receiver<instructions::Instruction>)
-where
+fn run<T>(
+    device: &cpal::Device,
+    config: &cpal::StreamConfig,
+    receiver: crossbeam_channel::Receiver<Instruction>,
+) where
     T: cpal::Sample,
 {
     let sample_rate = config.sample_rate.0 as f32;
@@ -78,17 +81,25 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let mut saw: Saw = Saw {
-        frequency: 110.0,
+        frequency: 220.0,
         count: 0,
         val: 0.0,
     };
+
+    let mut vol = 0.0;
 
     let stream = device
         .build_output_stream(
             config,
             move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
                 for frame in data.chunks_mut(channels) {
-                    let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0)));
+                    while let Ok(instruction) = receiver.try_recv() {
+                        match instruction {
+                            Instruction::Set(v) => vol = v as f32,
+                        }
+                    }
+
+                    let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0) * vol));
                     for sample in frame.iter_mut() {
                         *sample = value;
                     }

@@ -1,3 +1,3 @@
 pub enum Instruction {
-	Test,
+    Set(i32),
 }

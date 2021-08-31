@@ -1,4 +1,5 @@
 use almostagame::audiostuff::{cpal_stuff, Saw};
+use almostagame::instructions::Instruction;
 
 use macroquad::prelude::*;
 
@@ -14,6 +15,12 @@ async fn main() {
         draw_rectangle(screen_width() / 2.0 - 60.0, 100.0, 120.0, 60.0, GREEN);
         draw_circle(screen_width() - 30.0, screen_height() - 30.0, 15.0, YELLOW);
         draw_text("HELLO", 20.0, 20.0, 20.0, DARKGRAY);
+
+        if is_mouse_button_down(MouseButton::Left) {
+            sender.send(Instruction::Set(1));
+        } else {
+            sender.send(Instruction::Set(0));
+        }
 
         next_frame().await
     }

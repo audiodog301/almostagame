@@ -1,2 +1,2 @@
-pub mod instructions;
 pub mod audiostuff;
+pub mod instructions;
