@@ -1,6 +1,8 @@
 use std::thread;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
+use crate::instructions;
+
 pub struct Saw {
     pub frequency: f32,
     pub count: i32,
@@ -30,7 +32,7 @@ impl Saw {
     }
 }
 
-pub fn cpal_stuff() {
+pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<instructions::Instruction>) {
     let mut children = Vec::new();
     children.push(thread::spawn( move ||  {
         #[cfg(all(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"),feature = "jack"))]
@@ -59,14 +61,14 @@ pub fn cpal_stuff() {
         let config = device.default_output_config().unwrap();
 
         match config.sample_format() {
-            cpal::SampleFormat::F32 => run::<f32>(&device, &config.into()),
-            cpal::SampleFormat::I16 => run::<i16>(&device, &config.into()),
-            cpal::SampleFormat::U16 => run::<u16>(&device, &config.into()),
+            cpal::SampleFormat::F32 => run::<f32>(&device, &config.into(), receiver),
+            cpal::SampleFormat::I16 => run::<i16>(&device, &config.into(), receiver),
+            cpal::SampleFormat::U16 => run::<u16>(&device, &config.into(), receiver),
         };
     }));
 }
 
-fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig)
+fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig, receiver: crossbeam_channel::Receiver<instructions::Instruction>)
 where
     T: cpal::Sample,
 {

@@ -1,11 +1,11 @@
-mod audiostuff;
-use audiostuff::{cpal_stuff, Saw};
+use almostagame::audiostuff::{cpal_stuff, Saw};
 
 use macroquad::prelude::*;
 
 #[macroquad::main("almostagame")]
 async fn main() {
-    cpal_stuff();
+    let (sender, receiver) = crossbeam_channel::bounded(1024);
+    cpal_stuff(receiver.clone());
 
     loop {
         clear_background(RED);
