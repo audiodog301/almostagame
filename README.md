@@ -1,0 +1,2 @@
+# almostagame
+the goal of this project is to familiarize myself with using macroquad and how i can use it with cpal. the end goal in general is to have a relaxing game/soundscape/experience. this project may end up becoming that, or a successor project might. the whole idea may never come to fruition!
