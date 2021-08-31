@@ -60,35 +60,29 @@ where
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let mut saw: Saw = Saw {
         frequency: 110.0,
         count: 0,
-        val: 0.0
+        val: 0.0,
     };
 
-    let stream = device.build_output_stream(
-        config,
-        move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-            write_data(data, channels, &mut saw)
-        },
-        err_fn,
-    );
-    stream.unwrap().play();
+    let stream = device
+        .build_output_stream(
+            config,
+            move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
+                for frame in data.chunks_mut(channels) {
+                    let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0)));
+                    for sample in frame.iter_mut() {
+                        *sample = value;
+                    }
+                }
+            },
+            err_fn,
+        )
+        .unwrap();
+    stream.play();
 
     loop {}
-}
-
-fn write_data<T>(output: &mut [T], channels: usize, saw: &mut Saw)
-where
-    T: cpal::Sample,
-{
-    for frame in output.chunks_mut(channels) {
-        let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0)));
-        for sample in frame.iter_mut() {
-            *sample = value;
-        }
-    }
 }
