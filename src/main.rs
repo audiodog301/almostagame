@@ -1,9 +1,8 @@
 use almostagame::audiostuff::{cpal_stuff, Saw};
-use almostagame::instructions::Instruction;
+use almostagame::instructions::Information;
 
 use macroquad::prelude::*;
 
-const MOVE_SPEED: f32 = 0.1;
 const LOOK_SPEED: f32 = 0.1;
 
 fn conf() -> Conf {
@@ -21,6 +20,9 @@ async fn main() {
     let (sender, receiver) = crossbeam_channel::bounded(1024);
     cpal_stuff(receiver.clone());
 
+    
+    let mut MOVE_SPEED: f32 = 0.1;
+    
     let mut x = 0.0;
     let mut switch = false;
     let bounds = 8.0;
@@ -69,6 +71,11 @@ async fn main() {
         if is_key_down(KeyCode::D) {
             position += right * MOVE_SPEED;
         }
+        if is_key_down(KeyCode::LeftControl) {
+            MOVE_SPEED = 0.15;
+        } else {
+            MOVE_SPEED = 0.1;
+        }
 
         let mouse_position: Vec2 = mouse_position().into();
         let mouse_delta = mouse_position - last_mouse_position;
@@ -95,7 +102,7 @@ async fn main() {
             switch = !switch;
         }
 
-        clear_background(LIGHTGRAY);
+        clear_background(Color::from_rgba(145, 229, 255, 255));
 
         // Going 3d!
 
@@ -106,15 +113,15 @@ async fn main() {
             ..Default::default()
         });
 
-        draw_grid(20, 1., BLACK, GRAY);
+        draw_plane(vec3(0.0, 0.0, 0.0), vec2(10.0, 10.0), None, Color::from_rgba(151, 255, 120, 255));
 
         set_default_camera();
         draw_text("click to make a sound", 10.0, 40.0, 60.0, WHITE);
 
         if is_mouse_button_down(MouseButton::Left) {
-            sender.send(Instruction::Set(1));
+            sender.send(Information::Click(true));
         } else {
-            sender.send(Instruction::Set(0));
+            sender.send(Information::Click(false));
         }
 
         next_frame().await

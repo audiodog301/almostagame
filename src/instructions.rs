@@ -1,3 +1,3 @@
-pub enum Instruction {
-    Set(i32),
+pub enum Information {
+    Click(bool),
 }

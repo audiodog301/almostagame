@@ -1,7 +1,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::thread;
 
-use crate::instructions::Instruction;
+use crate::instructions::Information;
 
 pub struct Saw {
     pub frequency: f32,
@@ -32,7 +32,7 @@ impl Saw {
     }
 }
 
-pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Instruction>) {
+pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Information>) {
     let mut children = Vec::new();
     children.push(thread::spawn( move ||  {
         #[cfg(all(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"),feature = "jack"))]
@@ -71,7 +71,7 @@ pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Instruction>) {
 fn run<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    receiver: crossbeam_channel::Receiver<Instruction>,
+    receiver: crossbeam_channel::Receiver<Information>,
 ) where
     T: cpal::Sample,
 {
@@ -95,7 +95,7 @@ fn run<T>(
                 for frame in data.chunks_mut(channels) {
                     while let Ok(instruction) = receiver.try_recv() {
                         match instruction {
-                            Instruction::Set(v) => vol = v as f32,
+                            Information::Click(v) => vol = if v {1.0} else {0.0},
                         }
                     }
 
