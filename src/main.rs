@@ -11,7 +11,7 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        draw_text("click to make a sound", 10.0, 20.0, 20.0, WHITE);
+        draw_text("click to make a sound", 10.0, 40.0, 60.0, WHITE);
 
         if is_mouse_button_down(MouseButton::Left) {
             sender.send(Instruction::Set(1));
