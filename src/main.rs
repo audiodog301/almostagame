@@ -43,6 +43,8 @@ async fn main() {
     let mut position = vec3(0.0, 2.0, 0.0);
     let mut last_mouse_position: Vec2 = mouse_position().into();
 
+    let mut y_vel = 0.0;
+
     let mut grabbed = true;
     set_cursor_grab(grabbed);
     show_mouse(false);
@@ -72,9 +74,12 @@ async fn main() {
             position += right * MOVE_SPEED;
         }
         if is_key_down(KeyCode::LeftControl) {
-            MOVE_SPEED = 0.15;
+            MOVE_SPEED = 0.25;
         } else {
             MOVE_SPEED = 0.1;
+        }
+        if is_key_pressed(KeyCode::Space) && position.y == 2.0 {
+            y_vel = 0.4;
         }
 
         let mouse_position: Vec2 = mouse_position().into();
@@ -102,6 +107,12 @@ async fn main() {
             switch = !switch;
         }
 
+        position.y += y_vel;
+        y_vel -= 0.035;
+        if position.y < 2.0 {
+            position.y = 2.0;
+        }
+
         clear_background(Color::from_rgba(145, 229, 255, 255));
 
         // Going 3d!
@@ -113,7 +124,7 @@ async fn main() {
             ..Default::default()
         });
 
-        draw_plane(vec3(0.0, 0.0, 0.0), vec2(10.0, 10.0), None, Color::from_rgba(151, 255, 120, 255));
+        draw_plane(vec3(0.0, 0.0, 0.0), vec2(25.0, 25.0), None, Color::from_rgba(151, 255, 120, 255));
 
         set_default_camera();
         draw_text("click to make a sound", 10.0, 40.0, 60.0, WHITE);
