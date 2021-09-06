@@ -1,5 +1,6 @@
-use almostagame::audiostuff::{cpal_stuff, Saw};
-use almostagame::instructions::Information;
+use almostagame::audiostuff::{cpal_stuff, process_player_details, Saw};
+use almostagame::instructions::Instruction;
+use almostagame::gamestuff::PlayerDetails;
 
 use macroquad::prelude::*;
 
@@ -20,7 +21,11 @@ async fn main() {
     let (sender, receiver) = crossbeam_channel::bounded(1024);
     cpal_stuff(receiver.clone());
 
-    
+    let mut player_details: PlayerDetails = PlayerDetails {
+        pos: vec3(0.0, 0.0, 0.0),
+        clicking: false,
+    };
+
     let mut MOVE_SPEED: f32 = 0.1;
     
     let mut x = 0.0;
@@ -129,10 +134,13 @@ async fn main() {
         set_default_camera();
         draw_text("click to make a sound", 10.0, 40.0, 60.0, WHITE);
 
-        if is_mouse_button_down(MouseButton::Left) {
-            sender.send(Information::Click(true));
-        } else {
-            sender.send(Information::Click(false));
+        player_details.clicking = is_mouse_button_down(MouseButton::Left);
+        player_details.pos = position;
+
+        let instructions = process_player_details(player_details);
+
+        for instruction in instructions {
+            sender.send(instruction);
         }
 
         next_frame().await

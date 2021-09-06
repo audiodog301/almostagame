@@ -1,3 +1,4 @@
-pub enum Information {
-    Click(bool),
-}
+pub enum Instruction {
+    Volume(f32),
+    Pitch(f32),
+ }

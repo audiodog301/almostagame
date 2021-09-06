@@ -1,7 +1,8 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::thread;
 
-use crate::instructions::Information;
+use crate::instructions::Instruction;
+use crate::gamestuff::PlayerDetails;
 
 pub struct Saw {
     pub frequency: f32,
@@ -32,7 +33,7 @@ impl Saw {
     }
 }
 
-pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Information>) {
+pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Instruction>) {
     let mut children = Vec::new();
     children.push(thread::spawn( move ||  {
         #[cfg(all(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"),feature = "jack"))]
@@ -71,7 +72,7 @@ pub fn cpal_stuff(receiver: crossbeam_channel::Receiver<Information>) {
 fn run<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    receiver: crossbeam_channel::Receiver<Information>,
+    receiver: crossbeam_channel::Receiver<Instruction>,
 ) where
     T: cpal::Sample,
 {
@@ -95,11 +96,12 @@ fn run<T>(
                 for frame in data.chunks_mut(channels) {
                     while let Ok(instruction) = receiver.try_recv() {
                         match instruction {
-                            Information::Click(v) => vol = if v {1.0} else {0.0},
+                            Instruction::Volume(v) => vol = v,
+                            Instruction::Pitch(p) => saw.set_frequency(p.abs() * 2.5),
                         }
                     }
 
-                    let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0) * vol));
+                    let value: T = cpal::Sample::from::<f32>(&(saw.next_sample(44_100.0) * vol * 0.3));
                     for sample in frame.iter_mut() {
                         *sample = value;
                     }
@@ -111,4 +113,19 @@ fn run<T>(
     stream.play();
 
     loop {}
+}
+
+
+pub fn process_player_details(player_details: PlayerDetails) -> Vec<Instruction> {
+    let mut instructions = Vec::new();
+    
+    if player_details.clicking == true {
+        instructions.push(Instruction::Volume(1.0));
+    } else {
+        instructions.push(Instruction::Volume(0.0));
+    }
+
+    instructions.push(Instruction::Pitch(player_details.pos.x * 100.0));
+
+    instructions
 }
