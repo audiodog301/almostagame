@@ -1,6 +1,6 @@
 use almostagame::audiostuff::{cpal_stuff, process_player_details, Saw};
-use almostagame::instructions::Instruction;
 use almostagame::gamestuff::PlayerDetails;
+use almostagame::instructions::Instruction;
 
 use macroquad::prelude::*;
 
@@ -27,7 +27,7 @@ async fn main() {
     };
 
     let mut MOVE_SPEED: f32 = 0.1;
-    
+
     let mut x = 0.0;
     let mut switch = false;
     let bounds = 8.0;
@@ -129,7 +129,12 @@ async fn main() {
             ..Default::default()
         });
 
-        draw_plane(vec3(0.0, 0.0, 0.0), vec2(25.0, 25.0), None, Color::from_rgba(151, 255, 120, 255));
+        draw_plane(
+            vec3(0.0, 0.0, 0.0),
+            vec2(25.0, 25.0),
+            None,
+            Color::from_rgba(151, 255, 120, 255),
+        );
 
         set_default_camera();
         draw_text("click to make a sound", 10.0, 40.0, 60.0, WHITE);
