@@ -130,15 +130,17 @@ pub fn process_player_details(player_details: PlayerDetails) -> Vec<Instruction>
     instructions
 }
 
-pub struct Connection {
+pub struct Connection<'a> {
     val: f32,
     to_set: Vec<f32>,
+    ins: Vec<&'a Connection<'a>>,
 }
-impl Connection {
+impl Connection<'_> {
     pub fn new() -> Self {
         Self {
             val: 0.0,
             to_set: Vec::new(),
+            ins: Vec::new(),
         }
     }
     pub fn get_value(&self) -> f32 {
@@ -155,10 +157,10 @@ impl Connection {
     }
 }
 
-pub struct FauxGraph {
-    connections: [Connection; 8],
+pub struct FauxGraph<'a> {
+    connections: [Connection<'a>; 8],
 }
-impl FauxGraph {
+impl FauxGraph<'_> {
     pub fn new() -> Self {
         Self {
             connections: [
@@ -171,6 +173,14 @@ impl FauxGraph {
                 Connection::new(),
                 Connection::new(),
             ],
+        }
+    }
+
+    pub fn update(&mut self) {
+        for connection in self.connections.iter_mut() {
+            for input in &mut connection.ins {
+                input.update();
+            }
         }
     }
 }
